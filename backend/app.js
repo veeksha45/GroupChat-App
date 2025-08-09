@@ -1,30 +1,44 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+
 const sequelize = require('./config/db');
+const User = require('./models/User');
+const Message = require('./models/Message');
+
 const authRoutes = require('./routes/authRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
 
-// ✅ CORS Configuration for Production
-const allowedOrigins = ['https://yourfrontend.com', 'http://localhost:5500']; // Add your real frontend URL
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+
+// API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
 
-sequelize.sync()
-  .then(() => console.log('Database connected & synced'))
-  .catch(err => console.error('DB connection error:', err));
+// Protected route example: chat page (only accessible if logged in)
+app.get('/chat.html', authMiddleware, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
 
-app.listen(3000, () => console.log('Server running on port 3000 at  http://localhost:3000'));
+// Sequelize model associations
+Message.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Message, { foreignKey: 'userId' });
+
+// Sync DB and start server
+sequelize.sync({ alter: true })
+  .then(() => {
+    console.log('Database connected & synced');
+    app.listen(3000, () => console.log('Server running at http://localhost:3000'));
+  })
+  .catch(err => {
+    console.error('DB connection error:', err);
+  });
