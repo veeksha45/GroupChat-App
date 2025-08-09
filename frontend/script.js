@@ -6,12 +6,23 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   const phone = document.getElementById('phone').value;
   const password = document.getElementById('password').value;
 
-  const res = await fetch('http://localhost:3000/api/auth/signup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, phone, password })
-  });
+  try {
+    const res = await fetch('http://localhost:3000/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password })
+    });
 
-  const data = await res.json();
-  document.getElementById('message').textContent = data.message;
+    const data = await res.json();
+
+    if (res.status === 201) {
+      alert('Successfully signed up');
+    } else if (res.status === 409) {
+      alert('User already exists, Please Login');
+    } else {
+      alert(data.message);
+    }
+  } catch (err) {
+    alert('Error connecting to server');
+  }
 });
