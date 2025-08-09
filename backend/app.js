@@ -27,4 +27,4 @@ sequelize.sync()
   .then(() => console.log('Database connected & synced'))
   .catch(err => console.error('DB connection error:', err));
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+app.listen(3000, () => console.log('Server running on port 3000 at  http://localhost:3000'));
